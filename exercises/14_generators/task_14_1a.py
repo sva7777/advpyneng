@@ -15,3 +15,24 @@
 
 Проверить работу генератора на примере файла config_r1.txt.
 """
+import re
+
+
+def get_intf_ip(filename):
+    
+    re_string = r"interface (\S+)\n"\
+              r"( .*\n)*"\
+              r" ip address (\S+) (\S+)"
+    re_comp = re.compile(re_string)
+    
+    with open(filename) as f:
+        for m in re.finditer(re_comp, f.read()):
+            yield (m.group(1), m.group(3), m.group(4) )
+
+        
+    
+ 
+if __name__ == '__main__':
+    gen= get_intf_ip("/home/vasily/advpyneng/exercises/14_generators/config_r1.txt")
+    for item in gen:
+        print(item)

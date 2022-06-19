@@ -44,6 +44,7 @@ Out[5]: Route(status='*>', network='23.36.64.0', netmask='20', nexthop='200.219.
 
 import csv
 from collections import namedtuple
+from pprint import pprint
 
 
 def filter_by_nexthop(iterable, nexthop):
@@ -58,12 +59,31 @@ def filter_by_mask(iterable, mask):
             yield line
 
 
+def filter_data_by_attr(iterable, name, value):
+   
+    for line in iterable:
+        if name not in line._fields:
+            raise ValueError("no such field {} in {}".format(name, iterable))
+        v = getattr(line, name)
+        if v == value:
+            yield line
+    
+
+
 if __name__ == "__main__":
-    with open("rib_table.csv") as f:
+    with open("/home/vasily/advpyneng/exercises/14_generators/rib_table.csv") as f:
         reader = csv.reader(f)
         headers = next(reader)
         Route = namedtuple("Route", headers)
         route_tuples = map(Route._make, reader)
+        
+        
+        test = filter_data_by_attr(route_tuples, "nexthop", "200.219.145.23")
+        for t in test:
+            pprint (t)
+        
 
-        nhop_23 = filter_by_nexthop(route_tuples, "200.219.145.23")
-        mask_20 = filter_by_mask(nhop_23, "20")
+        #nhop_23 = filter_by_nexthop(route_tuples, "200.219.145.23")
+        #mask_20 = filter_by_mask(nhop_23, "20")
+        
+        
