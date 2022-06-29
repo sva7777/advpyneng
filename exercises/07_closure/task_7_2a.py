@@ -34,3 +34,20 @@ Out[9]: 84
 In [10]: toys.buy(24)
 Out[10]: 108
 """
+
+def count_total():
+    total = 0
+    def replace():
+        pass
+    def buy(sum):
+        nonlocal total
+        total = total+ sum
+        return total   
+    replace.buy = buy
+    return replace
+
+if __name__ == "__main__":
+    books = count_total()
+
+    print( books.buy(25) )
+    print( books.buy(15) )

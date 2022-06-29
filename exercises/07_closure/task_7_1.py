@@ -23,7 +23,7 @@ from netmiko import ConnectHandler
 
 device_params = {
     "device_type": "cisco_ios",
-    "ip": "192.168.100.1",
+    "ip": "10.210.255.2",
     "username": "cisco",
     "password": "cisco",
     "secret": "cisco",
@@ -35,7 +35,11 @@ def netmiko_ssh(**params_dict):
     ssh.enable()
 
     def send_show_command(command):
-        return ssh.send_command(command)
+        if command == "close":
+            ssh.close()
+            return "Соединение закрыто"
+        else:
+            return ssh.send_command(command)
 
     return send_show_command
 
@@ -43,3 +47,4 @@ def netmiko_ssh(**params_dict):
 if __name__ == "__main__":
     r1 = netmiko_ssh(**device_params)
     print(r1("sh clock"))
+    print(r1("close"))

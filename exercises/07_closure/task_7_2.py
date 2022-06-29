@@ -34,3 +34,16 @@ Out[9]: 84
 In [10]: toys(24)
 Out[10]: 108
 """
+
+def count_total():
+    total = 0
+    def inner(sum):
+        nonlocal total
+        total = total+ sum
+        return total
+    return inner
+
+if __name__ == "__main__":
+    books = count_total()
+    print( books(25) )
+    print( books(15) )
