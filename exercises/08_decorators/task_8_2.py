@@ -29,10 +29,12 @@ ValueError: Все аргументы должны быть строками
 
 
 def all_args_str(func):
-    def wrapper(*args):
+    def wrapper(*args, **kwargs):
         if not all(isinstance(arg, str) for arg in args):
             raise ValueError("Все аргументы должны быть строками")
-        return func(*args)
+        if not all(isinstance(kwarg, str) for name, kwarg, in kwargs.items() ):
+            raise ValueError("Все аргументы должны быть строками")
+        return func(*args,**kwargs)
 
     return wrapper
 

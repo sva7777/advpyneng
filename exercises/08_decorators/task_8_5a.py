@@ -42,11 +42,22 @@ In [16]: f2.total_calls
 Out[16]: 5
 
 """
-
-
+def count_calls(func):
+    def wrapper(*args, **kwargs):
+        wrapper.total_calls += 1
+        return func(*args, **kwargs)
+    wrapper.total_calls =0
+    return wrapper
+    
+@count_calls
 def f1():
     return True
 
-
+@count_calls
 def f2():
     return False
+
+if __name__ == "__main__":
+    for _ in range(5):
+        f1()
+        print(f1.total_calls)

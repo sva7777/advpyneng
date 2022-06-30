@@ -54,13 +54,25 @@ from netmiko import (
 
 device_params = {
     "device_type": "cisco_ios",
-    "host": "192.168.100.1",
+    "host": "10.210.255.2",
     "username": "cisco",
     "password": "cisco",
     "secret": "cisco",
 }
 
+def retry(times=0):
+    def wrapper(func):
+        def inner(*args, **kwargs):
+            for retry in range(1,times+2):
+                result = func(*args, **kwargs)
+                print(result)
+                if result:
+                    return result
+        return inner
 
+    return wrapper
+    
+@retry(times=3)
 def send_show_command(device, show_command):
     print("Подключаюсь к", device["host"])
     try:
@@ -74,3 +86,4 @@ def send_show_command(device, show_command):
 
 if __name__ == "__main__":
     output = send_show_command(device_params, "sh clock")
+    #print(output)

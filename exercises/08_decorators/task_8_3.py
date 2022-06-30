@@ -57,15 +57,29 @@ from netmiko import ConnectHandler
 
 device_params = {
     "device_type": "cisco_ios",
-    "host": "192.168.100.1",
+    "host": "10.210.255.2",
     "username": "cisco",
     "password": "cisco",
     "secret": "cisco",
 }
 
+def add_verbose(func):
+    def wrapper(*args, **kwargs):
+        if "verbose" in kwargs:
+            kwargs.pop("verbose")
+            print("Вызываем send_show_command")
+            print("Позиционные аргументы: {}".format(args) )
+            print("Ключевые аргументы: {}".format(kwargs) )
+            
+        return func(*args,**kwargs)
+    return wrapper
 
+@add_verbose
 def send_show_command(params, command):
     with ConnectHandler(**params) as ssh:
         ssh.enable()
         result = ssh.send_command(command)
     return result
+
+if __name__ == "__main__":
+    print(send_show_command(device_params, "sh clock", verbose = True))
