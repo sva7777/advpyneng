@@ -120,26 +120,94 @@ ValueError: IP-адрес свободен
 
 """
 
+import ipaddress
+
+class IPv4Network:
+    
+    #ToDo gw сделать ключевым
+    def __init__(self, ip_mask, gw = None):
+        self.__network = ipaddress.ip_network(ip_mask)
+        
+        if gw:
+            gw_check = ipaddress.ip_address(gw)
+            
+        self.gw = gw
+        
+        
+        self.broadcast = format(self.__network.broadcast_address)
+        
+        if gw and (not gw_check in self.__network):
+            raise ValueError("gw is not in network")
+        
+
+        self.__allocated = set()
+        self.__unassigned = set()
+        
+        for host in self.__network.hosts():
+            self.__unassigned.add(format(host))
+        
+        if gw:
+            self.allocate_ip(gw)
+       
+    
+    @property
+    def hosts(self):
+        res = list ()
+        for host in self.__network.hosts():
+            res.append( format(host))
+        return tuple(res)
+        
+    @property
+    def allocated(self):
+        return self.__allocated
+    
+    @property
+    def unassigned(self):
+        return self.__unassigned
+        
+    @property
+    def network(self):
+        return format (self.__network)
+
+    def allocate_ip(self, ip):
+        ip_address = ipaddress.ip_address(ip)
+        if not ip_address in self.__network:
+            raise ValueError("Адрес не входит в данную сеть")
+        if ip in self.allocated: 
+            raise ValueError("Адрес уже выделен")
+        
+        self.__allocated.add(ip)
+        self.__unassigned.remove(ip)
+        
+    def free_ip(self, ip):
+        ip_address = ipaddress.ip_address(ip)
+        if not (ip  in self.__allocated):
+            raise ValueError("Данный адрес не был выделен")
+            
+        self.__allocated.remove(ip)
+        self.__unassigned.add(ip)
+        
+    
 
 if __name__ == "__main__":
     # Примеры обращения к переменным и вызова методов
-    net1 = IPv4Network("10.1.1.0/29")
-    # net1 = IPv4Network('10.1.1.0/29', gw="10.1.1.1")
-    print(f"{net1.broadcast=}")
-    print(f"{net1.hosts=}")
-    print(f"{net1.allocated=}")
-    print(f"{net1.unassigned=}")
+    #net1 = IPv4Network("10.1.1.0/29")
+    net1 = IPv4Network('10.1.1.0/29', gw="10.1.1.1")
+    print("{}".format(net1.broadcast))
+    print("{}".format(net1.hosts))
+    print("{}".format(net1.allocated))
+    print("{}".format(net1.unassigned))
 
     # allocate ip:
-    print(f">>> {net1.allocate_ip('10.1.1.6')=}")
-    print(f">>> {net1.allocate_ip('10.1.1.3')=}")
-    print(f"{net1.allocated=}")
-    print(f"{net1.unassigned=}")
-    print(f"<<< {net1.free_ip('10.1.1.3')=}")
-    print(f"{net1.allocated=}")
-    print(f"{net1.unassigned=}")
-    print(f">>> {net1.allocate_ip('10.1.1.3')=}")
+    net1.allocate_ip('10.1.1.6')
+    net1.allocate_ip('10.1.1.3')
+    print("{}".format(net1.allocated))
+    print("{}".format(net1.unassigned))
+    net1.free_ip('10.1.1.3')
+    print("{}".format(net1.allocated))
+    print("{}".format(net1.unassigned))
+    net1.allocate_ip('10.1.1.3')
     # print(f">>> {net1.allocate_ip('10.1.1.3')=}") # ValueError
     # print(f">>> {net1.allocate_ip('10.1.1.113')=}") # ValueError
-    print(f"{net1.allocated=}")
-    print(f"{net1.unassigned=}")
+    print("{}".format(net1.allocated))
+    print("{}".format(net1.unassigned))
