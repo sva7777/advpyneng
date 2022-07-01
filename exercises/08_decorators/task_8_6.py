@@ -51,13 +51,54 @@ Out[11]: True
 import ipaddress
 
 
+
+
+def total_order(cls):
+    def __ge__(self, other):
+        if self < other:
+            return False
+        else:
+            return True
+    def __ne__(self, other):
+        if  (self == other):
+            return False
+        else:
+            return True
+    def __le__(self, other):
+        if (self < other) or (self == other):
+            return True
+        else:
+            return False
+    def __gt__(self, other):
+        if not (self <other) and not (self == other):
+            return True
+        else:
+            return False
+            
+    #check existance of __eq__ and __lt__
+    eq = getattr(cls, "__eq__", None)
+    lt = getattr(cls, "__lt__", None)
+    if (eq is None) or (lt is None):
+        raise ValueError("нет атрибута __eq__ или __lt__")
+    if (not callable(eq)) or (not callable(lt)):
+        raise ValueError("нет метода __eq__ или __lt__")
+
+    cls.__ge__= __ge__
+    cls.__ne__= __ne__
+    cls.__le__= __le__
+    cls.__gt__= __gt__
+    
+    
+    return cls
+
+@total_order
 class IPAddress:
     def __init__(self, ip):
         self._ip = int(ipaddress.ip_address(ip))
         self.ip = ip
 
     def __repr__(self):
-        return f"IPAddress('{self.ip}')"
+        return "IPAddress('{}')".format(self.ip)
 
     def __eq__(self, other):
         return self._ip == other._ip
@@ -65,3 +106,16 @@ class IPAddress:
     def __lt__(self, other):
         return self._ip < other._ip
 
+@total_order
+class DoThing:
+    pass
+    
+if __name__ == "__main__":
+    ip1 = IPAddress('10.10.1.1')
+    ip2 = IPAddress('10.2.1.1')
+    print(ip1 < ip2)
+    print(ip1 > ip2)
+    print(ip1 >= ip2)
+    print(ip1 <= ip2)
+    print(ip1 == ip2)
+    print(ip1 != ip2)
