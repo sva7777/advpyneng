@@ -70,6 +70,8 @@ import re
 
 import yaml
 
+from datetime import datetime, timedelta
+
 
 class CiscoTelnet:
     def __init__(
@@ -80,7 +82,13 @@ class CiscoTelnet:
         secret=None,
         read_timeout=5,
         encoding="utf-8",
+        config_cache_timeout = 60
     ):
+        #New code
+        self.__config_cache_timeout = config_cache_timeout
+        self.__cfg = None
+        self.__requesttime = None
+        
         self.host = host
         self.username = username
         self.prompt = ">"
@@ -109,7 +117,23 @@ class CiscoTelnet:
             self.prompt = "#"
         self._write_line("terminal length 0")
         self._read_until(self.prompt)
-
+        
+    @property
+    def cfg(self):
+        
+        if (self.__requesttime) and (datetime.today().replace(microsecond=0) - timedelta(0,self.__config_cache_timeout)  <= self.__requesttime ):
+            #read config
+            print( self.__requesttime )  
+            test = self.__requesttime + timedelta(0,self.__config_cache_timeout)
+            return self.__cfg
+        else:
+            self.__cfg = self.send_show_command("show run")
+            self.__requesttime = datetime.today().replace(microsecond=0)
+            test = self.__requesttime + timedelta(0,self.__config_cache_timeout)
+            return self.__cfg
+        
+        
+    
     def _read_until(self, line):
         output = self._telnet.read_until(
             line.encode(self.encoding), timeout=self.read_timeout
@@ -146,7 +170,7 @@ class CiscoTelnet:
 
 if __name__ == "__main__":
     r1_params = {
-        "host": "192.168.100.1",
+        "host": "10.210.255.2",
         "username": "cisco",
         "password": "cisco",
         "secret": "cisco",
@@ -154,8 +178,8 @@ if __name__ == "__main__":
     }
     # пример использования cfg, до выполнения задания будет ошибка
     with CiscoTelnet(**r1_params) as r1:
-        print(r1.cfg)
+        r1.cfg
         r1.send_config("interface loopback77")
-        print(r1.cfg)
+        r1.cfg
         time.sleep(5)
-        print(r1.cfg)
+        r1.cfg
