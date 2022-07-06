@@ -58,6 +58,83 @@ R1(config)#sh i
 % Ambiguous command:  "sh i"
 """
 
+from base_telnet_class import TelnetBase
+import re 
+
+
+class ErrorInCommand(Exception):
+    """
+    Исключение генерируется, если при выполнении команды на оборудовании,
+    возникла ошибка.
+    """
+
+
+class CiscoTelnet(TelnetBase):
+    def __init__(self, ip, username, password, enable, disable_paging = True, encoding= "ascii"):
+        super().__init__(ip, username, password, encoding)
+        if enable:
+            self._write_line("enable")
+            self._read_until_regex("Password:") 
+            self._telnet.write(enable.encode("utf-8") + b"\n")
+            self._read_until_regex("#")
+            
+        if disable_paging:
+            self._write_line("terminal length 0")
+            self._read_until_regex("#")
+    
+    def _check_error_in_command(self, command, output):
+        regex = "% (?P<err>.+)"
+        
+        message = (
+            'При выполнении команды "{cmd}" на устройстве {device} '
+            'возникла ошибка "{error}"'
+        )
+            
+        error_in_cmd = re.search(regex, output)
+        
+        if error_in_cmd:
+            raise ErrorInCommand(message.format(cmd= command, device=self.host, error= error_in_cmd.group("err")  ))
+
+    
+    def send_show_command(self, command):
+        self._write_line(command)
+        command_output = self._read_until_regex("#")
+        self._check_error_in_command(command, command_output)
+        return command_output
+    
+    def _enter_config_mode(self):
+        self._write_line("conf t")
+        return self._read_until_regex("(config)#")
+        
+    def _exit_config_mode(self):
+        self._write_line("end")
+        return self._read_until_regex("#")
+        
+    def _send_config_command(self, command):
+        self._write_line(command)
+        output = self._read_until_regex("#")
+        self._check_error_in_command(command, output)
+        return output
+    
+    def send_config_commands(self, commands):
+        result = self._enter_config_mode()
+        if type(commands) == str:
+            commands= [commands]
+        
+        for command in commands:
+            result = result + self._send_config_command(command)
+        
+        result = result + self._exit_config_mode()
+        
+        return result
+
+
 # списки команд с ошибками и без:
 config_commands_errors = ["logging 0255.255.1", "logging", "sh i"]
 correct_config_commands = ["logging buffered 20010", "ip http server"]
+
+
+if __name__ == "__main__":
+    r1 = CiscoTelnet('10.210.255.2', 'cisco', 'cisco', 'cisco')
+    r1.send_show_command('sh clck')
+    r1.send_config_commands('loggg 7.7.7.7')

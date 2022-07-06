@@ -38,3 +38,55 @@ Out[4]: 'conf t\r\nEnter configuration commands, one per line.  End with CNTL/Z.
 Тест берет значения из файла devices.yaml, поэтому если
 для заданий используются другие адреса/логины, надо заменить их там.
 """
+
+from base_telnet_class import TelnetBase
+
+ 
+  
+class CiscoTelnet(TelnetBase):
+    def __init__(self, ip, username, password, enable, disable_paging = True, encoding= "ascii"):
+        super().__init__(ip, username, password, encoding)
+        if enable:
+            self._write_line("enable")
+            self._read_until_regex("Password:") 
+            self._telnet.write(enable.encode("utf-8") + b"\n")
+            self._read_until_regex("#")
+            
+        if disable_paging:
+            self._write_line("terminal length 0")
+            self._read_until_regex("#")
+            
+    def send_show_command(self, command):
+        self._write_line(command)
+        command_output = self._read_until_regex("#")
+        return command_output
+    
+    def _enter_config_mode(self):
+        self._write_line("conf t")
+        return self._read_until_regex("(config)#")
+        
+    def _exit_config_mode(self):
+        self._write_line("end")
+        return self._read_until_regex("#")
+        
+    def _send_config_command(self, command):
+        self._write_line(command)
+        output = self._read_until_regex("#")
+        return output
+    
+    def send_config_commands(self, commands):
+        result = self._enter_config_mode()
+        if type(commands) == str:
+            commands= [commands]
+        
+        for command in commands:
+            result = result + self._send_config_command(command)
+        
+        result = result + self._exit_config_mode()
+        
+        return result
+    
+    
+if __name__ == "__main__":
+    r1 = CiscoTelnet('10.210.255.2', 'cisco', 'cisco', 'cisco')
+    print ( r1.send_show_command("sh ip int br") )
