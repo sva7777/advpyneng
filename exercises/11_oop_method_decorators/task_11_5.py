@@ -46,6 +46,17 @@ import re
 
 
 class CiscoTelnet:
+    @classmethod 
+    def input_params(cls, **params):
+        if not 'host' in params:
+            params['host']= input("Enter host: ")
+        if not 'username' in params:
+            params['username']= input("Enter username: ")
+        if not 'password' in params:
+            params['password']= input("Enter password: ")
+            
+        return cls(**params)
+        
     def __init__(
         self,
         host,
@@ -125,5 +136,8 @@ if __name__ == "__main__":
         "password": "cisco",
         "secret": "cisco",
     }
-    with CiscoTelnet(**r1_params) as r1:
-        print(r1.send_show_command("sh clock"))
+    
+    r1 = CiscoTelnet.input_params(**r1_params)
+     
+    #with CiscoTelnet(**r1_params) as r1:
+    #    print(r1.send_show_command("sh clock"))
