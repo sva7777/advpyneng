@@ -156,3 +156,63 @@ example1 = {
 }
 
 example2 = {("R1", "Eth0/4"): ("R7", "Eth0/0"), ("R1", "Eth0/6"): ("R9", "Eth0/0")}
+
+from collections.abc import MutableMapping
+
+class Topology(MutableMapping):
+    def __init__(self, topology):
+        if type(topology) != dict :
+            raise ValueError("передан не словарь")
+        self.__topology = topology
+    
+    @property
+    def topology(self):
+        return self.__topology
+    
+    def __getitem__(self, key):
+        if key in self.__topology:
+            return self.__topology[key]
+        else:
+            return None
+        
+    def __setitem__(self, key, value):
+        self.__topology[key]= value
+        
+    def __delitem__(self, key):
+        if key in self.__topology:
+            del self.__topology[key]
+        
+    def __iter__(self):
+        return iter(self.__topology)
+        
+    def __len__(self):
+        return len(self.__topology)
+        
+
+if __name__ == "__main__":
+    t1 = Topology(example1)
+    print(t1.topology)
+    print(t1[('R1', 'Eth0/0')])
+    t1[('R1', 'Eth0/0')] = ('SW1', 'Eth0/12')
+    print(t1.topology)
+    t1[('R6', 'Eth0/0')] = ('SW1', 'Eth0/17')
+    print(t1.topology)
+    del t1[('R6', 'Eth0/0')]
+    print(t1.topology)
+    for item in t1:
+        print(item)
+    print(len(t1))
+    print(t1.topology)
+    print(t1.keys()) 
+    print(t1.values())
+    print(t1.get(('R2', 'Eth0/0')))
+    print(t1.get(('R2', 'Eth0/4')))
+    print(t1.pop(('R2', 'Eth0/0')))
+    print(t1.topology)
+    t2 = Topology(example2)
+    print(t2.topology)
+    t1.update(t2)
+    print(t1.topology)
+    t1.clear()
+    print(t1.topology)
+    

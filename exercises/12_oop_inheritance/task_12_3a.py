@@ -144,3 +144,89 @@ example1 = {
 }
 
 example2 = {("R1", "Eth0/4"): ("R7", "Eth0/0"), ("R1", "Eth0/6"): ("R9", "Eth0/0")}
+
+
+
+from collections.abc import MutableMapping
+from pprint import pprint
+
+class Topology(MutableMapping):
+    
+    @staticmethod
+    def _normalize_topology(topology):
+        
+        
+        #
+        res = dict()
+        for l1_left, l1_rigth in topology.items():
+            if  l1_rigth in res.keys():
+                # нужно решить какой оставить
+                if l1_left < res[l1_rigth]:
+                    pass
+                else:
+                    del res[l1_rigth]
+                    res[l1_left]=l1_rigth
+            else:
+                res[l1_left]=l1_rigth
+        return res
+
+    
+    def __init__(self, topology):
+        if type(topology) != dict :
+            raise ValueError("передан не словарь")
+        self.__topology = Topology._normalize_topology(topology)
+    
+    @property
+    def topology(self):
+        return self.__topology
+    
+    def __getitem__(self, item):
+        if item in self.__topology:
+            return self.__topology[item]
+        else:
+            for key, value in self.__topology.items():
+                if item == value:
+                    return key
+        
+    def __setitem__(self, key, value):
+        self.__topology[key]= value
+        self.__topology = Topology._normalize_topology(self.__topology)
+        
+    def __delitem__(self, item):
+        to_del = None
+        if item in self.__topology:
+            del self.__topology[item]
+        else:
+            for key, value in self.__topology.items():
+                if item == value:
+                    del self.__topology[key]
+                    break
+            
+        
+    def __iter__(self):
+        return iter(self.__topology)
+        
+    def __len__(self):
+        return len(self.__topology)
+
+
+example = {
+        ("R1", "Eth0/0"): ("SW1", "Eth0/1"),
+        ("R2", "Eth0/0"): ("SW1", "Eth0/2"),
+        ("R3", "Eth0/0"): ("SW1", "Eth0/3"),
+        ("SW1", "Eth0/1"): ("R1", "Eth0/0"),
+        ("SW1", "Eth0/2"): ("R2", "Eth0/0"),
+        ("SW1", "Eth0/3"): ("R3", "Eth0/0"),
+        }
+
+
+if __name__ == "__main__":
+    #t1 = Topology(example1)
+    #pprint(t1.topology)
+    
+    top = Topology(example)
+    if top[("R1", "Eth0/0")] == ("SW1", "Eth0/1") :
+        pprint("Hello1")
+    else:
+        pprint("Hello2")
+    

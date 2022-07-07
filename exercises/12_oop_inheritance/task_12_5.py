@@ -26,8 +26,16 @@ Out[5]: [__main__.A, __main__.InheritanceMixin, object]
 Определение классов можно менять.
 """
 
+class InheritanceMixin:
+        
+    def subclasses(self= None):
+        return InheritanceMixin.__subclasses__()
+        
+    def superclasses(self = None):
+        return InheritanceMixin.mro()
 
-class A:
+
+class A(InheritanceMixin):
     pass
 
 
@@ -35,9 +43,16 @@ class B(A):
     pass
 
 
-class C:
+class C(InheritanceMixin):
     pass
 
 
 class D(A, C):
     pass
+
+if __name__ == "__main__":
+    print(A.subclasses())
+    print(A.superclasses())
+    a = A()
+    print(a.subclasses())
+    print(a.superclasses())

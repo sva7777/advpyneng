@@ -45,19 +45,46 @@ Out[11]: True
 """
 import ipaddress
 
+class OrderingMixin:
+    def __ge__(self, other):
+        if self < other:
+            return False
+        else:
+            return True
+    def __ne__(self, other):
+        if  (self == other):
+            return False
+        else:
+            return True
+    def __le__(self, other):
+        if (self < other) or (self == other):
+            return True
+        else:
+            return False
+    def __gt__(self, other):
+        if not (self <other) and not (self == other):
+            return True
+        else:
+            return False
 
-class IPAddress:
+    
+
+
+class IPAddress(OrderingMixin):
     def __init__(self, ip):
         self._ip = int(ipaddress.ip_address(ip))
 
     def __str__(self):
-        return f"IPAddress: {self._ip}"
+        return "IPAddress: {}".format(self._ip)
 
     def __repr__(self):
-        return f"IPAddress('{self._ip}')"
+        return "IPAddress('{}')".format(self._ip)
 
     def __eq__(self, other):
         return self._ip == other._ip
 
     def __lt__(self, other):
         return self._ip < other._ip
+
+if __name__ == "__main__":
+    ip1 = IPAddress('10.10.1.1')
