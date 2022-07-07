@@ -23,6 +23,7 @@ Out[5]: {'price': 35.0, 'quantity': 5, 'title': 'Good Omens', 'total': 175.0}
 
 """
 from dataclasses import dataclass, field
+from pprint import pprint
 
 
 @dataclass
@@ -47,3 +48,15 @@ class Book:
         if not value >= 0:
             raise ValueError("Значение должно быть положительным")
         self._price = float(value)
+    
+    def to_dict(self):
+        res = dict()
+        
+        for i in [v for v in dir(self) if (not callable(getattr(self,v)) and ( not v.startswith("_") )  )  ]  :
+            res[i] = getattr(self, i)
+
+        return res
+
+if __name__ == "__main__":
+    b1 = Book('Good Omens', 35, 5)
+    print(b1.to_dict())

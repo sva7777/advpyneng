@@ -27,3 +27,19 @@ Out[5]: 'OSPF'
 In [6]: route1
 Out[6]: Route(prefix='10.1.1.0/24', nexthop='10.2.2.2')
 """
+
+from dataclasses import dataclass, field
+
+@dataclass
+class Route:
+    prefix: str
+    nexthop: str
+    protocol :str= field(repr=False)
+    
+    
+if __name__ == "__main__":
+    route1 = Route('10.1.1.0/24', '10.2.2.2', 'OSPF')
+    print(route1.nexthop)
+    print(route1.prefix)
+    print(route1.protocol)
+    print(route1)

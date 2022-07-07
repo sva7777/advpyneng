@@ -34,3 +34,18 @@ class IPAddress:
 
     def __post_init__(self):
         self._ip = int(ipaddress.ip_address(self.ip))
+        
+    def __add__(self, other):
+        if type(other) != int:
+            raise ValueError("Функция add, ожидается что идет сложение с int")
+        self._ip = self._ip + other
+        self.ip=str(ipaddress.ip_address(self._ip))
+        return self
+
+if __name__ == "__main__":
+    ip1 = IPAddress('10.10.1.1', 24)
+    print(ip1)
+    print(ip1+5)
+    ip2 = ip1 +5
+    print(isinstance(ip2, IPAddress))
+    
