@@ -9,27 +9,28 @@
 
 """
 import ipaddress
+from typing import List, Iterator
 
 
 class IPv4Network:
-    def __init__(self, network):
+    def __init__(self, network : str) -> None:
         self.network = network
         address, mask = network.split("/")
         self.network_address = address
         self.mask = int(mask)
         self.bin_mask = "1" * self.mask + "0" * (32 - self.mask)
 
-    def hosts(self):
+    def hosts(self) -> List[str]:
         net = ipaddress.ip_network(self.network)
         return [str(ip) for ip in net.hosts()]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Network('{self.network}')"
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.hosts())
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self.hosts())
 
 

@@ -8,19 +8,21 @@
 Проверить код с помощью mypy, если возникли какие-то ошибки, исправить их.
 """
 
+from typing import Dict, Tuple
+
 
 class Topology:
-    def __init__(self, topology_dict):
+    def __init__(self, topology_dict : Dict[Tuple[str, str], Tuple[str, str] ]) -> None:
         self.topology = self._normalize(topology_dict)
 
-    def _normalize(self, topology_dict):
+    def _normalize(self, topology_dict: Dict[Tuple[str, str], Tuple[str, str]]  ) -> Dict[Tuple[str, str], Tuple[str, str]] :
         normalized_topology = {}
         for box, neighbor in topology_dict.items():
             if not neighbor in normalized_topology:
                 normalized_topology[box] = neighbor
         return normalized_topology
 
-    def delete_link(self, from_port, to_port):
+    def delete_link(self, from_port: Tuple[str, str], to_port: Tuple[str, str]) -> None :
         if self.topology.get(from_port) == to_port:
             del self.topology[from_port]
         elif self.topology.get(to_port) == from_port:

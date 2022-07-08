@@ -15,9 +15,9 @@ from itertools import repeat
 import yaml
 from netmiko import ConnectHandler
 from netmiko.ssh_exception import SSHException
+from typing import Dict
 
-
-def send_show(device_dict, command):
+def send_show(device_dict : Dict , command :str) ->str:
     try:
         with ConnectHandler(**device_dict) as ssh:
             ssh.enable()
@@ -27,7 +27,7 @@ def send_show(device_dict, command):
         return str(error)
 
 
-def send_command_to_devices(devices, command, max_workers=3):
+def send_command_to_devices(devices : Dict, command : str , max_workers: int =3 ) -> Dict: 
     data = {}
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         result = executor.map(send_show, devices, repeat(command))
