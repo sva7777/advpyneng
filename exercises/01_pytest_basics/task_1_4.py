@@ -38,6 +38,7 @@ import re
 
 import yaml
 
+import pytest
 
 class CiscoTelnet:
     def __init__(
@@ -101,14 +102,59 @@ class CiscoTelnet:
         self._telnet.close()
 
 
-if __name__ == "__main__":
-    r1_params = {
-        "host": "192.168.100.1",
+r1_params = {
+        "host": "10.210.255.2",
         "username": "cisco",
         "password": "cisco",
         "secret": "cisco",
     }
+
+if __name__ == "__main__":
     with CiscoTelnet(**r1_params) as r1:
         print(r1.send_show_command("sh clock"))
         print(r1.send_show_command("sh ip int br"))
         print(r1.send_show_command("sh run | i hostname"))
+
+
+def test_check_telnet_exists():
+    try:
+        with CiscoTelnet(**r1_params) as r1:
+            assert ( r1.prompt == ">" or r1.prompt =="#") , "не корретный prompt"
+    except Exception  as error:
+        pytest.fail(" сгенерировано исключение при создании экземпляра класса CiscoTelnet", error)
+    
+def test_check_secret():
+    try:
+        with CiscoTelnet(r1_params['host'], r1_params['username'], r1_params['password']) as r1:
+            assert ( r1.prompt == ">" or r1.prompt =="#") , "не корретный prompt"
+    except Exception  as error:
+        pytest.fail(" сгенерировано исключение при создании экземпляра класса CiscoTelnet", error)
+    
+    
+    try:
+        with CiscoTelnet(**r1_params) as r1:
+            assert ( r1.prompt == ">" or r1.prompt =="#") , "не корретный prompt"
+            output = r1.send_show_command("sh clock")
+            assert output != None , "вывод команды sh clock == None"
+            assert len(output) > 0 , "отсутствует вывод команды sh clock"
+            output = r1.send_show_command("sh run | i hostname")
+            assert output != None , "вывод команды sh run | i hostname == None"
+            assert len(output) > 0 , "отсутствует вывод команды sh run | i hostname"
+            assert r1.prompt == "#" , "promt не равен ожидаемому #"
+
+            
+    except Exception  as error:
+        pytest.fail(" сгенерировано исключение при создании экземпляра класса CiscoTelnet", error)
+
+def test_check_context_manager():
+    try:
+        with CiscoTelnet(**r1_params) as r1:
+            output = r1.send_show_command("sh clock")
+        try:
+            r1.send_show_command("sh clock")
+        except Exception as error:
+            pass
+        else:
+            pytest.fail("не отработал сcontext manager класса CiscoTelnet", error)
+    except Exception  as error:
+        pytest.fail(" сгенерировано исключение при создании экземпляра класса CiscoTelnet", error)
