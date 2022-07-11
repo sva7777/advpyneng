@@ -40,3 +40,51 @@ if __name__ == "__main__":
         pprint(get_int_vlan_map(f.read()))
     with open("config_sw2.txt") as f:
         pprint(get_int_vlan_map(f.read()))
+
+
+def test_get_int_vlan_map_ret_val_type():
+    with open("config_sw1.txt") as f:
+        access_port_dict, trunk_port_dict = get_int_vlan_map(f.read())
+        assert type(access_port_dict) == dict , "sw1 должен возвращаться dict для access"
+        assert type(trunk_port_dict) == dict , "sw1 должен возвращаться dict для trunk"
+    with open("config_sw2.txt") as f:
+        access_port_dict, trunk_port_dict = get_int_vlan_map(f.read())
+        assert type(access_port_dict) == dict , "sw2 должен возвращаться dict для access"
+        assert type(trunk_port_dict) == dict , "sw2 должен возвращаться dict для trunk"
+
+
+def test_get_int_vlan_map_ret_val():
+    access_sw1={'FastEthernet1/3': 1,
+                'FastEthernet0/0': 10,
+                'FastEthernet0/2': 20,
+                'FastEthernet1/0': 20,
+                'FastEthernet1/1': 30
+                
+                }
+    trunk_sw1= {'FastEthernet0/1': [100, 200],
+                'FastEthernet0/3': [100, 300, 400, 500, 600],
+                'FastEthernet1/2': [400, 500, 600]
+                }
+    
+    access_sw2={'FastEthernet0/0': 10,
+                'FastEthernet0/2': 20,
+                'FastEthernet1/0': 20,
+                'FastEthernet1/1': 30,
+                'FastEthernet1/3': 1,
+                'FastEthernet2/0': 1,
+                'FastEthernet2/1': 1
+                }
+    trunk_sw2= {'FastEthernet0/1': [100, 200],
+                'FastEthernet0/3': [100, 300, 400, 500, 600],
+                'FastEthernet1/2': [400, 500, 600]
+                }
+    with open("config_sw1.txt") as f:
+        access_port_dict, trunk_port_dict = get_int_vlan_map(f.read())
+        assert access_port_dict == access_sw1 ,"sw1 не соотвествие ожидаемым данным для access"
+        assert trunk_port_dict == trunk_sw1 , "sw1 не соотвествие ожидаемым данным для trunk"
+    
+    with open("config_sw2.txt") as f:
+        access_port_dict, trunk_port_dict = get_int_vlan_map(f.read())
+        assert access_port_dict == access_sw2 , "sw2 не соотвествие ожидаемым данным для access"
+        assert trunk_port_dict == trunk_sw2 , "sw2 не соотвествие ожидаемым данным для trunk"
+        

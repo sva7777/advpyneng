@@ -27,6 +27,7 @@
 Для заданий этого раздела нет тестов для проверки тестов :)
 """
 import ipaddress
+import inspect
 
 
 class Network:
@@ -48,3 +49,53 @@ class Network:
 if __name__ == "__main__":
     # пример создания экземпляра
     net1 = Network('10.1.1.192/30')
+    print(net1.addresses[-4])
+    
+
+def test_Network_variables_exist():
+    net1 = Network("10.1.1.192/30")
+    assert getattr(net1, "network", None) != None , "Атрибут network не найден"
+    assert getattr(net1, "addresses", None) != None , "Атрибут addresses не найден"
+    
+def test_Network_variables_correct_values():
+    net1 = Network("10.1.1.192/30")
+    assert net1.network == "10.1.1.192/30"  , "Атрибут network содержит не корректное значение"
+    assert net1.addresses == ('10.1.1.193', '10.1.1.194'), "Атрибут addresses содержит не корректное значение"
+
+
+def test_Network_method_iter_exists():
+    net1 = Network("10.1.1.192/30")
+    
+    assert getattr(net1, "__iter__", None) != None , "Метод __iter__ не найден"
+    assert inspect.ismethod( getattr(net1, "__iter__")) , "__iter__ должен быть методом, а не переменной"
+    
+
+def test_Network_method_iter_works():
+    net1 = Network("10.1.1.192/30")
+    try:
+        iterator = iter(net1)
+    except TypeError as error:
+        pytest.fail("Network не итерируемый объект\n", error)
+    else:
+        item1 = next(iterator)
+        item2 = next(iterator)
+        assert item1 == "10.1.1.193" , "Итератор вернул не корректное значение"
+        assert item2 == "10.1.1.194" , "Итератор вернул не корректное значение"
+
+def test_Network_method_len():
+    net1 = Network("10.1.1.192/30")
+    assert len(net1) == 2, "len возвратил не корректное значение"
+    
+
+def test_Network_method_getitem():
+    net1 = Network("10.1.1.192/30")
+    assert net1[0] == "10.1.1.193",  "не корректное значение при обращении по индексу"
+    assert net1[1] == "10.1.1.194",  "не корректное значение при обращении по индексу"
+    assert net1[-1] == "10.1.1.194",  "не корректное значение при обращении по индексу"
+    assert net1[-2] == "10.1.1.193",  "не корректное значение при обращении по индексу"
+    try:
+        i = net1[2]
+    except IndexError as error:
+        pass
+    else:
+        pytest.fail("не сгенерировано исключение при обращение по не существующему индексу", error)
