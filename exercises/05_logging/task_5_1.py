@@ -77,17 +77,23 @@ import yaml
 from netmiko import ConnectHandler
 from netmiko.ssh_exception import SSHException
 
+import logging
 
 def send_show(device_dict, command):
     ip = device_dict["host"]
+    logger.debug("Подключение к {}".format(ip))
+    
     try:
         with ConnectHandler(**device_dict) as ssh:
             ssh.enable()
             result = ssh.send_command(command)
+            logger.debug("Получен ответ от {}".format(ip))
         return result
     except SSHException as error:
+        logger.warning("{}".format(error))
         return error
     except ValueError as error:
+        logger.warning("{}".format(error))
         return error
 
 
@@ -97,10 +103,26 @@ def send_command_to_devices(devices, command, max_workers=5):
         result = executor.map(send_show, devices, repeat(command))
         for device, output in zip(devices, result):
             data[device["host"]] = output
+            print(data)
     return data
 
 
 if __name__ == "__main__":
+    
+    logger = logging.getLogger("root")
+    logger.setLevel(logging.DEBUG)
+    
+    
+    
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    
+    formatter = logging.Formatter("%(threadName)s %(asctime)s, %(lineno)d, %(name)s %(levelname)s: %(message)s", "%H:%M:%S")
+    ch.setFormatter(formatter)
+    
+    logger.addHandler(ch)
+    
+    
     with open("devices_netmiko.yaml") as f:
         devices = yaml.safe_load(f)
     pprint(send_command_to_devices(devices, "sh clock"))

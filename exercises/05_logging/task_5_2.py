@@ -19,10 +19,26 @@ R1#
 Для заданий этого раздела нет тестов.
 """
 from cisco_telnet_class import CiscoTelnet
-
+import cisco_telnet_class 
+import logging
 
 if __name__ == "__main__":
+
+    cisco_telnet_class.log = logging.getLogger(__name__)
+    cisco_telnet_class.log.handlers.clear()
+    
+    cisco_telnet_class.log.setLevel(logging.DEBUG)
+    
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    
+    formatter = logging.Formatter("%(asctime)s - %(module)s - %(levelname)s - %(message)s", "%H:%M:%S")
+    ch.setFormatter(formatter)
+    
+    cisco_telnet_class.log.addHandler(ch)
+
     r1 = CiscoTelnet(
-        "192.168.100.1", username="cisco", password="cisco", enable_password="cisco"
+        "10.210.255.2", username="cisco", password="cisco", enable_password="cisco"
     )
+    
     print(r1.send_show_command("sh clock"))
