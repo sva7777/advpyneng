@@ -98,4 +98,4 @@ def test_Network_method_getitem():
     except IndexError as error:
         pass
     else:
-        pytest.fail("не сгенерировано исключение при обращение по не существующему индексу", error)
+        pytest.fail("не сгенерировано исключение при обращение по не существующему индексу")
