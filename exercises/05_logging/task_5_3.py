@@ -60,6 +60,7 @@ import yaml
 from netmiko import ConnectHandler
 from netmiko.ssh_exception import SSHException
 
+import logging
 
 def parse_cdp(output):
     regex = (
@@ -76,6 +77,7 @@ def parse_cdp(output):
 
 def connect_ssh(params, command):
     try:
+        logger.info("Подключение SSH к {}".format(params['host']))
         with ConnectHandler(**params) as ssh:
             ssh.enable()
             prompt = ssh.find_prompt()
@@ -90,6 +92,8 @@ def explore_topology(start_device_ip, ssh_params):
     visited_hostnames = set()
     topology = []
     todo = [start_device_ip]
+    
+    logger.info("Начинается обход сети. Стартовое устройство {}".format(start_device_ip))
 
     while len(todo) > 0:
         current_ip = todo.pop(0)
@@ -105,16 +109,48 @@ def explore_topology(start_device_ip, ssh_params):
 
         for neighbor_link in neighbors:
             neighbor_ip = neighbor_link.pop("remote_ip")
+            
+            #vasily map
+            if neighbor_ip =="192.168.255.2":
+                neighbor_ip = "10.210.255.2"
+            if neighbor_ip =="192.168.255.3":
+                neighbor_ip = "10.210.255.3"
+            if neighbor_ip =="192.168.255.4":
+                neighbor_ip = "10.210.255.4"
+            if neighbor_ip =="192.168.255.5":
+                neighbor_ip = "10.210.255.5"
+            
             neighbor = neighbor_link["remote_host"]
             ip_hostname_dict[neighbor_ip] = neighbor
             topology.append({"local_host": current_host, **neighbor_link})
 
             if neighbor not in visited_hostnames:
+                logger.debug("Новое устройство {} {} , добавляем в ToDo".format(neighbor, neighbor_ip))
                 todo.append(neighbor_ip)
+            else:
+                logger.debug("Уже были на устройстве {}".format(neighbor))
+            
     return topology
 
 
 if __name__ == "__main__":
+    # setup loggers
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s - %(name)s- %(levelname)s - %(message)s", "%H:%M:%S")
+    ch.setFormatter(formatter)
+    
+    file = logging.FileHandler("task_5_3_my_log.txt")
+    file.setLevel(logging.DEBUG)
+    file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    file.setFormatter(file_formatter)
+    
+    logger.addHandler(ch)
+    logger.addHandler(file)
+    
     common_params = {
         "device_type": "cisco_ios",
         "password": "cisco",
@@ -125,7 +161,7 @@ if __name__ == "__main__":
     with open("devices.yaml") as f:
         devices = yaml.safe_load(f)
 
-    start = "192.168.100.1"
+    start = "10.210.255.2"
     topology = explore_topology(start, ssh_params=common_params)
     pprint(topology, width=120)
     print(tabulate(topology, headers="keys"))
