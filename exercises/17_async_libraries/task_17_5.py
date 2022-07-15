@@ -45,19 +45,84 @@ logging_with_error = "logging 0255.255.1"
 logging_correct = "logging buffered 20010"
 
 host_commands_dict = {
-    "192.168.100.2": logging_correct,
-    "192.168.100.3": logging_with_error,
-    "192.168.100.1": ospf,
+    "10.210.255.3": logging_correct,
+    "10.210.255.4": logging_with_error,
+    "10.210.255.2": ospf,
 }
 
 import asyncio
 import yaml
+import re
+from scrapli import AsyncScrapli
+from scrapli.exceptions import ScrapliCommandFailure
+
+def is_error(output):
+    r_string = r"% (?P<errmsg>.+)"
+    
+    match = re.search (r_string, output)
+    
+    if match:
+        return True
+    
+    return False
+
+async def configure_router(device, config_commands):
+    result = ""
+    
+    if type (config_commands)== str:
+        config_commands = [config_commands]
+    try:
+        async with AsyncScrapli(**device) as ssh:
+            for command in config_commands:
+                reply = await ssh.send_config(command)
+                if is_error(reply.result):
+                    raise ScrapliCommandFailure('Команда "{}" выполнилась с ошибкой\n"{}" на устройстве {}'.format(command, reply.result, device['host']))
+                result = result + reply.result
+    except ScrapliCommandFailure:
+        raise
+    except Exception as e:
+        print(e)
+    
+    return result
+
+
+async def configure_net_devices(devices, device_commands_map):
+    tasks =[] 
+    ips = []
+    ret = dict()
+    
+    for ip, command in device_commands_map.items():
+        for device in devices:
+            if device['host'] == ip:
+                task = asyncio.ensure_future(configure_router(device, command) )
+                ips.append (ip)
+                tasks.append(task) 
+    
+    result = await asyncio.gather(*tasks, return_exceptions= True) 
+    
+    for ip, res in zip(ips, result):
+        ret[ip] = res
+    
+    return ret
+
+#Функция возвращает словарь:
+
+#* ключ - IP-адрес устройства с которого получен вывод
+#* значение - вывод, который вернула функция configure_router для этого устройства или
+#  исключение
 
 
 
+    #result = await asyncio.gather(*tasks, return_exceptions= True)
 
 if __name__ == "__main__":
     with open("devices_scrapli.yaml") as f:
         devices = yaml.safe_load(f)
-    pprint(asyncio.run(configure_net_devices(devices, host_commands_dict)))
-    pprint(asyncio.run(configure_net_devices(devices[1:], host_commands_dict)))
+    
+    
+    loop = asyncio.get_event_loop()
+    
+    print ( loop.run_until_complete( configure_net_devices (devices, host_commands_dict) ) )
+    print ( loop.run_until_complete( configure_net_devices (devices[1:], host_commands_dict) ) )
+    
+    
