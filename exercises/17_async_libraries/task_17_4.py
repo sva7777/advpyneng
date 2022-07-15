@@ -68,14 +68,55 @@ correct_commands = ["logging buffered 20010", "ip http server"]
 
 import asyncio
 import yaml
+import re
+from scrapli import AsyncScrapli
+from scrapli.exceptions import ScrapliCommandFailure
 
+def is_error(output):
+    r_string = r"% (?P<errmsg>.+)"
+    
+    match = re.search (r_string, output)
+    
+    if match:
+        return True
+    
+    return False
+
+
+
+async def configure_router(device, config_commands):
+    result = ""
+    
+    if type (config_commands)== str:
+        config_commands = [config_commands]
+    try:
+        async with AsyncScrapli(**device) as ssh:
+            
+            for command in config_commands:
+                reply = await ssh.send_config(command)
+                if is_error(reply.result):
+                    raise ScrapliCommandFailure('Команда "{}" выполнилась с ошибкой\n"{}" на устройстве {}'.format(command, reply.result, device['host']))
+                result = result + reply.result
+    except ScrapliCommandFailure:
+        raise
+    except Exception as e:
+        print(e)
+    
+
+    return result   
 
 
 if __name__ == '__main__':
     with open('devices_scrapli.yaml') as f:
         devices = yaml.safe_load(f)
-    # примеры вызова функции (не будут работать до выполнения задания)
-    print(asyncio.run(configure_router(devices[0], correct_commands + commands_with_errors)))
-    print(asyncio.run(configure_router(devices[0], correct_commands)))
-    print(asyncio.run(configure_router(devices[0], commands_with_errors[1])))
-
+        
+    loop = asyncio.get_event_loop()
+    
+    print( loop.run_until_complete( configure_router(devices[0], correct_commands + commands_with_errors))  )
+    print( loop.run_until_complete( configure_router(devices[0], correct_commands))  )
+    print( loop.run_until_complete( configure_router(devices[0], commands_with_errors[1]))  )
+    
+    
+    
+    
+    
