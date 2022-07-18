@@ -38,8 +38,22 @@ import asyncio
 
 import aiofiles
 
+import glob
+from pathlib import Path
 
 async def get_one_neighbor(filename):
+    result = dict()
+    # нужно по имени файла определить имя устройста. Такой код я писал. Найти    
+    file = Path(filename).name
+    file = file.split(".")[0]
+    
+    device_name= file.split("_")[-1]
+    
+    pprint("Device name {}".format(device_name))
+    
+    inner = dict()
+    
+    
     async with aiofiles.open(filename) as f:
         line = ''
         while True:
@@ -50,10 +64,16 @@ async def get_one_neighbor(filename):
                 if '----------' in line:
                     break
                 neighbor += line
-            yield neighbor
+                
+            inner.update(parse_neighbor(neighbor))
+            
+            pprint(result)
+            
+            
             line = await f.readline()
             if not line:
-                return
+                result[device_name] = inner
+                return result
 
 
 def parse_neighbor(output):
@@ -70,12 +90,24 @@ def parse_neighbor(output):
         result[device] = match.groupdict()
     return result
 
+   
 
-async def main():
-    cdp_filename = 'sh_cdp_neighbors_detail_sw1.txt'
-    async for neighbor in get_one_neighbor(cdp_filename):
-        pprint(parse_neighbor(neighbor))
+async def get_all_cdp_neighbors():
+    files = glob.glob("/home/vasily/advpyneng/exercises/18_using_asyncio/sh_cdp_neighbors_detail_*.txt")
+     
+    tasks = []
+    for file_name in files:
+        task=asyncio.ensure_future(get_one_neighbor(file_name))
+        tasks.append(task)
 
+    result = await asyncio.gather(*tasks)
+    
+    
+    return result
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    pprint(loop.run_until_complete(get_all_cdp_neighbors() ) )
+    
+    
+    
