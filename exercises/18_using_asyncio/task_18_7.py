@@ -45,15 +45,35 @@ import itertools
 import time
 
 
-def spin():
+#def spin():
+#    spinner = itertools.cycle('\|/-')
+#    while True:
+#        print(f'\r{next(spinner)} Waiting...', end='')
+#        time.sleep(0.1)
+
+async def spin():
     spinner = itertools.cycle('\|/-')
     while True:
         print(f'\r{next(spinner)} Waiting...', end='')
-        time.sleep(0.1)
+        await asyncio.sleep(0.1)
 
 
+def spinner(func):
+    async def decorator(*args, **kwargs):
+        task_spinner = asyncio.ensure_future(spin())
+        task_func = asyncio.ensure_future(func(*args, **kwargs))
+        while not task_func.done():
+            await asyncio.sleep(0.01)
+        
+        task_spinner.cancel()   
+        
+        return task_func.result()
+    return decorator
+
+
+@spinner
 async def send_show(device, command):
-    print(f'Подключаюсь к {device["host"]}')
+    print(f'\nПодключаюсь к {device["host"]}')
     try:
         async with AsyncScrapli(**device) as conn:
             result = await conn.send_command(command)
@@ -63,7 +83,7 @@ async def send_show(device, command):
 
 
 device_params = {
-    "host": "192.168.100.1",
+    "host": "10.210.255.2",
     "auth_username": "cisco",
     "auth_password": "cisco",
     "auth_secondary": "cisco",
@@ -76,5 +96,7 @@ device_params = {
 
 
 if __name__ == "__main__":
-    output = asyncio.run(send_show(device_params, "show ip int br"))
-    print(output)
+    loop = asyncio.get_event_loop()
+    
+    output = loop.run_until_complete(send_show(device_params, "show ip int br"))
+    print("\n"+output)

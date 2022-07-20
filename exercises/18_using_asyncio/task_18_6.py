@@ -42,7 +42,7 @@ from scrapli import AsyncScrapli
 from scrapli.exceptions import ScrapliException
 
 device_params = {
-    "host": "192.168.100.1",
+    "host": "10.210.254.2",
     "auth_username": "cisco",
     "auth_password": "cisco",
     "auth_secondary": "cisco",
@@ -53,7 +53,17 @@ device_params = {
     "transport": "asyncssh",
 }
 
+def retry(times =0):
+    def wrapper(func):
+        async def inner (*args, **kwargs):
+            for retry in range(1, times +2):
+                result = await func(*args, **kwargs)
+                if result:
+                    return result
+        return inner
+    return wrapper
 
+@retry(times =5)
 async def send_show(device, command):
     print(f'Подключаюсь к {device["host"]}')
     try:
@@ -65,5 +75,7 @@ async def send_show(device, command):
 
 
 if __name__ == "__main__":
-    output = asyncio.run(send_show(device_params, "show ip int br"))
+    loop = asyncio.get_event_loop()
+    
+    output = loop.run_until_complete(send_show(device_params, "show ip int br"))
     print(output)

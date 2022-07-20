@@ -23,17 +23,46 @@ async def open_csv(filename):
 import csv
 import asyncio
 import aiofiles
+from pprint import pprint
 
+class aenumerate:
+    def __init__(self, file_handler):
+        self.__index =0 
+        self.__file_handler = file_handler
+    
+    async def __aiter__(self):
+        return self
+    
+    async def __anext__(self):
+        index = self.__index
+        line = await self.__file_handler.readline()
+        
+        if len(line) == 0:
+            raise StopAsyncIteration
+            
+        self.__index += 1
+        return (index, line)
+        
 
 async def open_csv(filename):
     async with aiofiles.open(filename) as f:
         headers = await f.readline()
         headers = list(csv.reader([headers]))[0]
-        index = 0
-        async for line in f:
+        async for index, line in aenumerate(f):
             print(index)
             yield dict(list(csv.DictReader([line], fieldnames=headers))[0])
-            index += 1
+
+
+
+#async def open_csv(filename):
+#    async with aiofiles.open(filename) as f:
+#        headers = await f.readline()
+#        headers = list(csv.reader([headers]))[0]
+#        index = 0
+#        async for line in f:
+#            print(index)
+#            yield dict(list(csv.DictReader([line], fieldnames=headers))[0])
+#            index += 1
 
 
 async def filter_prefix_next_hop(async_iterable, nexthop):
@@ -51,4 +80,7 @@ async def main(filename):
 
 if __name__ == "__main__":
     filename = 'rib.table.lg.ba.ptt.br-BGP.csv'
-    asyncio.run(main(filename))
+    
+    loop = asyncio.get_event_loop()
+    
+    loop.run_until_complete(main(filename))
